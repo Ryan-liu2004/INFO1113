@@ -1,0 +1,112 @@
+\documentclass[12pt]{article}
+\NeedsTeXFormat{LaTeX2e}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Template by Nicholas Bertollo
+% You may change and reuse this as you see fit
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Replace this information!
+
+\newcommand{\sid}{540243105} 
+\newcommand{\compunit}{INFO1113}
+\newcommand{\ass}{2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[svgnames]{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage[margin=2.7cm,a4paper]{geometry}
+
+\usepackage[osf]{mathpazo}
+\usepackage{amsmath,amsthm,amsfonts,amssymb,mathtools}
+
+\usepackage{hyperref,url}
+\usepackage{xstring}
+
+\usepackage{environ}
+\usepackage{tasks}
+
+\usepackage{etoolbox}
+\usepackage{fourier-orns}
+\usepackage{kvoptions}
+\usepackage[]{units}
+\usepackage[normal]{subfigure}
+
+% Algorithms package
+
+% \usepackage[ruled]{algorithm2e} % You can use the algorithm2e if you'd like
+\usepackage[noend]{algpseudocode} % You may get rid of noend if you like. 
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+
+% Header
+
+\usepackage{fancyhdr}
+\addtolength{\headheight}{2.5pt}
+\pagestyle{fancy}
+\fancyhead{} 
+\fancyhead[L]{\sc \compunit}
+\renewcommand{\headrulewidth}{0.75pt}
+\fancyhead[C]{\sc SID: \sid}
+\fancyhead[R]{Assignment \ass}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Some basic mathematics commands!
+
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\abs{\lvert}{\rvert}
+
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+
+\newcommand{\map}[2]{\,{:}\,#1\!\longrightarrow\!#2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{INFO1113 Citadels Game Report}
+\date{}
+
+\begin{document}
+\maketitle
+
+\subsection*{Overview}
+
+This project implements a single hunman-player version of the Citadels card game using object-oriented principles in Java. The core design aims to promote encapsulation, modularity, and extensibility, ensuring the code is maintainable and adaptable to future features.
+
+\subsection*{Implement of Extension}
+
+Compared to traditional card games, the online version allows game progress to be saved and loaded at any time. Firstly, all standard input and output operations are integrated into the \texttt{Super} class for easier and centralized control. Then, this project adds caching and logging function, which can record the operation from human player. When loading data, it can exactly come back to saving position by re-running game. For future features, it will not affect the implementation of game saving and loading, and this also reduces the risk of potential crashes. In addition, the functions of \texttt{getInput} and \texttt{getInput\_withoutcommand} in the \texttt{App} class, integrate all player input, as well as the strict player command format control is enforced through function parameters.
+
+\subsection*{Class Hierarchy}
+
+The main interactive \texttt{App} class and the \texttt{Player} class, which handles user information, both inherit from the \texttt{Super} class that contains all static I/O as well as save and load functionalities. Encapsulating standard input/output and modularized user command prompts reduces code duplication and enforces consistent input standards.
+
+\subsubsection*{Main Implement of Character Cards and Purple District Cards}
+
+The project uses \texttt{enum} to encapsulate character cards and district cards into two separate enums, with each card represented as an enum constant.
+
+\textbf{Character Cards}: The \texttt{GameCharacter} enum models the characters, each with distinct abilities and gameplay mechanics. This class effectively encapsulates character-specific logic, including unique resource behaviors and actions during a player's turn.
+
+Each \textbf{GameCharacter} instance contains overridden methods to define special behavior (\texttt{CharacterAbility}, \texttt{ExtraResource}). Enum constants override the same method signatures to provide character-specific behaviors. This allows dynamic dispatch based on the character instance. This also avoids an excessive class hierarchy and keeps all characters in a single, cohesive structure.
+
+
+\textbf{Purple District Cards}: Skill is enum that encapsulates the logic of the special abilities of the “purple cards”. Each Skill instance corresponds to a special area building (e.g. Laboratory, Armory, Museum, etc.) and defines its behavior such as building, destroying, and triggering skills.
+
+Each skill implements its own behavior by overriding the \texttt{Special}, \texttt{OnBuilding}, \texttt{destroyed}, \texttt{extraScore}, and \texttt{extraResource} methods.
+
+\subsubsection*{OOP Principle Application Analysis}
+
+For each enum constant, different methods can be overridden within an anonymous class to implement their respective unique logic. All abilities share interface methods under a unified enum structure, leveraging the object-oriented features built into enums to avoid creating numerous subclasses—effectively implementing a class hierarchy similar to a \texttt{SkillBase} or \texttt{GameCharacterBase}. For example, when we need to add a Queen, we simply add a new enumeration constant and override \texttt{ExtraResource} (similar to the merchant implementation) without modifying the existing class structure at all.
+
+\subsection*{Conclusion}
+
+This design allows to add new character or district cards through enum constants and overriding methods, thereby supporting future extensibility.
+
+\end{document}

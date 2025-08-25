@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Deck.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Assignment2</a> &gt; <a href="index.source.html" class="el_package">citadels</a> &gt; <span class="el_source">Deck.java</span></div><h1>Deck.java</h1><pre class="source lang-java linenums">/*
+Haochen Liu
+hliu0010
+540243105
+*/
+package citadels;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Manages the draw and discard piles for the Citadels game.
+ * Provides methods to push cards to piles, shuffle, draw, and represent the deck state.
+ */
+public class Deck extends Super{
+    public List&lt;Card&gt; deck, discard_deck;
+
+     /**
+     * Prints the given object followed by a newline.
+     *
+     * @param str the object to print
+     */
+    @Override
+<span class="fc" id="L25">    public void println(Object str) {super.println(str);}</span>
+
+     /**
+     * Constructs an empty Deck with separate draw and discard piles.
+     */
+<span class="fc" id="L30">    public Deck(){</span>
+<span class="fc" id="L31">        deck=new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L32">        discard_deck=new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L33">    }</span>
+    /**
+     * Adds a card to the discard pile.
+     *
+     * @param card the card to discard
+     */
+    public void dis_push(Card card){
+<span class="fc" id="L40">        discard_deck.add(card);</span>
+<span class="fc" id="L41">    }</span>
+    /**
+     * Adds a card to the draw pile.
+     *
+     * @param card the card to add to the deck
+     */
+    public void push(Card card){
+<span class="fc" id="L48">        deck.add(card);</span>
+<span class="fc" id="L49">    }</span>
+    /**
+     * Shuffles the draw pile using the application's random generator.
+     */
+    public void shuffle() {
+<span class="fc" id="L54">        Collections.shuffle(deck, App.rand);</span>
+<span class="fc" id="L55">    }</span>
+     /**
+     * Draws the top card from the draw pile. If the draw pile is empty,
+     * it refills by shuffling the discard pile back into the draw pile.
+     *
+     * @return the drawn Card
+     */
+    public Card draw(){
+<span class="fc" id="L63">        Card tmp=deck.remove(0);</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if(deck.isEmpty()) {</span>
+<span class="fc" id="L65">            deck.addAll(discard_deck);</span>
+<span class="fc" id="L66">            discard_deck.clear();</span>
+<span class="fc" id="L67">            shuffle();</span>
+<span class="fc" id="L68">            println(&quot;The deck is empty and has been reshuffled from the discard deck.&quot;);</span>
+        }
+<span class="fc" id="L70">        return tmp;</span>
+    }
+    /**
+     * Returns a formatted string representation of both draw and discard piles.
+     *
+     * @return a listing of cards in the draw pile and the discard pile
+     */
+    @Override
+    public String toString() {
+<span class="fc" id="L79">        StringBuilder sb=new StringBuilder();</span>
+<span class="fc" id="L80">        sb.append(&quot;Deck:\n&quot;);</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (Card i: deck) {</span>
+<span class="fc" id="L82">            sb.append(i).append(&quot;\n&quot;);</span>
+<span class="fc" id="L83">        }</span>
+<span class="fc" id="L84">        sb.append(&quot;Discard Deck:\n&quot;);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for (Card i: discard_deck) {</span>
+<span class="fc" id="L86">            sb.append(i).append(&quot;\n&quot;);</span>
+<span class="fc" id="L87">        }</span>
+<span class="fc" id="L88">        return sb.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

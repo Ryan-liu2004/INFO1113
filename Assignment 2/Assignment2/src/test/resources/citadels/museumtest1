@@ -1,0 +1,254 @@
+5608572581599818146
+4
+t
+t
+magician
+t
+t
+t
+gold
+hand
+debug
+action redraw
+discard 1
+discard 1
+discard 1
+discard 1
+hand
+end
+t
+t
+t
+t
+t
+t
+t
+arctitect
+architect
+t
+t
+t
+t
+t
+t
+t
+gold
+t
+hand
+end
+t
+t
+t
+architect
+t
+t
+t
+t
+t
+t
+t
+gold
+hand
+end
+t
+t
+t
+t
+magician
+t
+t
+gold
+action redraw
+discard 1
+discard 1
+discard 1
+discard 1
+discard 1
+discard 1
+discard 1
+discard 1
+hand
+build 8
+t
+t
+hand
+action
+action swao
+action swap
+end
+t
+t
+t
+t
+t
+t
+merchant
+t
+t
+t
+t
+t
+t
+t
+t
+gold
+t
+t
+t
+t
+t
+end
+t
+t
+t
+t
+t
+merchant
+t
+t
+t
+t
+t
+t
+t
+t
+t
+merchant
+t
+t
+t
+t
+t
+t
+t
+gold
+t
+end
+t
+t
+t
+merchant
+t
+t
+t
+t
+t
+t
+t
+gold
+t
+t
+end
+t
+t
+t
+t
+merchant
+t
+t
+t
+t
+t
+t
+gold
+t
+t
+tend
+end
+t
+t
+t
+t
+t
+assassin
+gold
+4
+t
+t
+end
+t
+t
+t
+t
+t
+t
+t
+t
+king
+t
+t
+t
+t
+gold
+t
+t
+end
+t
+t
+t
+t
+magician
+t
+t
+t
+t
+t
+gold
+action redraw
+discard 1
+discard 1
+discard 1
+discard 1
+discard 1
+discard 1
+discard 1
+ahnd
+hand
+build 3
+select 1
+select 1
+select 1
+select 1
+select 1
+select 1
+end
+t
+t
+t
+t
+t
+t
+all
+merchant
+t
+t
+t
+t
+t
+t
+t
+gold
+t
+t
+end
+t
+t
+t
+warlord
+t
+t
+t
+t
+t
+
+t
+t
+t
+t
+gold
+action destroy
+2
+destroy 6
+action destroy
+1
+destroy 2

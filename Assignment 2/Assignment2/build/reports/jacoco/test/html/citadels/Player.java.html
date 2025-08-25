@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Player.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Assignment2</a> &gt; <a href="index.source.html" class="el_package">citadels</a> &gt; <span class="el_source">Player.java</span></div><h1>Player.java</h1><pre class="source lang-java linenums">/*
+Haochen Liu
+hliu0010
+540243105
+*/
+package citadels;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * Represents a player in the Citadels game.
+ * Manages the player's hand, constructed buildings, gold, and character state,
+ * and provides command methods for various game actions.
+ */
+public class Player extends Super{
+    public boolean AIplayer, is_killed, is_stolen;
+    public int gold, num_built;
+    public List&lt;Card&gt; cards, building;
+    public GameCharacter ch;
+    public App app;
+    
+    /**
+     * Prints the given object without a newline, overriding Super.
+     *
+     * @param str the object to print
+     */
+    @Override
+<span class="fc" id="L30">    public void print(Object str) {super.print(str);}</span>
+    /**
+     * Prints the given object followed by a newline, overriding Super.
+     *
+     * @param str the object to print
+     */
+    @Override
+<span class="fc" id="L37">    public void println(Object str) {super.println(str);}</span>
+    /**
+     * Constructs a new player, defaults to AI control, and draws 4 starting cards.
+     *
+     * @param app reference to the main application instance
+     */
+<span class="fc" id="L43">    public Player(App app){</span>
+<span class="fc" id="L44">        AIplayer=true;</span>
+<span class="fc" id="L45">        gold=2;</span>
+<span class="fc" id="L46">        cards=new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L47">        building=new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        for(int i=0;i&lt;4;i++) drawCard();</span>
+<span class="fc" id="L49">        ch=null;</span>
+<span class="fc" id="L50">        this.app=app;</span>
+<span class="fc" id="L51">    }</span>
+    /**
+     * Constructs a new human-player and draws 4 starting cards.
+     *
+     * @param app  reference to the main application instance
+     * @param flag true if this player is AI-controlled, false if human
+     */
+    public Player(App app, boolean flag){
+<span class="fc" id="L59">        this(app);</span>
+<span class="fc" id="L60">        AIplayer=flag;</span>
+<span class="fc" id="L61">    }</span>
+    /**
+     * Sets the player's character for the round based on the character name.
+     *
+     * @param name the name of the character to assign
+     */
+    public void setCharacter(String name){
+<span class="fc" id="L68">        ch=GameCharacter.findCharacter(name);</span>
+<span class="fc" id="L69">    }</span>
+    /**
+     * Adds the specified card to the player's hand.
+     *
+     * @param card the card to add
+     */
+<span class="fc" id="L75">    public void addCard(Card card){cards.add(card);}</span>
+    /**
+     * Draws a card from the deck and adds it to the player's hand.
+     */
+<span class="fc" id="L79">    public void drawCard(){addCard(App.deck.draw());}</span>
+    /**
+     * Searches for a card by name in the provided list.
+     *
+     * @param l    the list of cards to search
+     * @param name the name of the card to find
+     * @return the matching Card if found, otherwise null
+     */
+    public Card CardContain(List&lt;Card&gt; l, String name){
+<span class="fc bfc" id="L88" title="All 4 branches covered.">        for(Card card: l) if(card.name.equals(name)) return card;</span>
+<span class="fc" id="L89">        return null;</span>
+    }
+
+    /**
+     * Begins the player's turn: resets build count and allows resource collection or card draw.
+     */
+    public void StartTurn(){
+<span class="fc" id="L96">        num_built=0;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if(!AIplayer) print(&quot;Collect 2 gold or draw two cards and pick one [gold/cards].\n&gt; &quot;);</span>
+        String opt;
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if(AIplayer){</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">            if(gold&lt;4) opt=&quot;gold&quot;;</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            else if(cards.size()&lt;3) opt=&quot;cards&quot;;</span>
+<span class="fc" id="L102">            else opt=new String[]{&quot;gold&quot;, &quot;cards&quot;}[App.rand.nextInt(2)];</span>
+        }
+<span class="fc" id="L104">        else opt=app.getInput_withoutcommand(new Object[]{&quot;gold&quot;, &quot;cards&quot;});</span>
+        int num, i, j;
+
+        //draw cards or gold
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if(opt.equals(&quot;gold&quot;)){</span>
+<span class="fc" id="L109">            println(&quot;Player collected 2 gold&quot;);</span>
+<span class="fc" id="L110">            gold+=2;</span>
+        }
+        else{
+<span class="fc" id="L113">            num=2;</span>
+            //Observatory
+<span class="fc bfc" id="L115" title="All 2 branches covered.">            if((boolean)Skill.Observatory.Special(this, app)){</span>
+<span class="fc" id="L116">                num=3;</span>
+<span class="fc" id="L117">                println(&quot;Observatory is triggered&quot;);</span>
+            }
+<span class="fc" id="L119">            List&lt;Card&gt; tmp=new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">            for(i=0;i&lt;num;i++) tmp.add(App.deck.draw());</span>
+            //Library
+<span class="fc bfc" id="L122" title="All 2 branches covered.">            if(CardContain(building, &quot;Library&quot;)!=null) println(&quot;Library is triggered&quot;);</span>
+            else{
+<span class="fc bfc" id="L124" title="All 2 branches covered.">                if(!AIplayer){</span>
+<span class="fc" id="L125">                    println(&quot;Pick one of the following cards: 'collect card &lt;option&gt;'.&quot;);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">                    for(i=0;i&lt;num;i++) println((i+1)+&quot; &quot;+tmp.get(i).toString());</span>
+<span class="fc" id="L127">                    print(&quot;&gt; &quot;);</span>
+                }
+<span class="fc" id="L129">                Object[] l=new Object[num];</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">                for(i=0;i&lt;num;i++) l[i]=&quot;collect card &quot;+(i+1);</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">                if(AIplayer) opt=&quot;collect card 1&quot;;</span>
+<span class="fc" id="L132">                else opt=app.getInput_withoutcommand(l);</span>
+<span class="fc" id="L133">                j=Integer.parseInt(opt.split(&quot; &quot;)[2]);</span>
+<span class="fc" id="L134">                Card chosen=tmp.get(j-1);</span>
+                //recycle
+<span class="fc bfc" id="L136" title="All 4 branches covered.">                for(i=0;i&lt;tmp.size();i++) if(i!=j-1) App.deck.dis_push(tmp.get(i));</span>
+<span class="fc" id="L137">                tmp.clear();</span>
+<span class="fc" id="L138">                tmp.add(chosen);</span>
+            }
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            if(AIplayer) println(&quot;Player drawed &quot;+tmp.size()+&quot; card&quot;);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            for(Card card: tmp) {</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">                if(!AIplayer) println(&quot;You gained &quot;+card.toString());</span>
+<span class="fc" id="L143">                addCard(card);</span>
+<span class="fc" id="L144">            }</span>
+        }
+
+        //extra resource
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        if(!is_killed) ch.ExtraResource(this);</span>
+        
+<span class="fc" id="L150">        Skill[] after_start={Skill.Laboratory, Skill.Smithy, Skill.School_Of_Magic,</span>
+            Skill.Armory, Skill.Museum};
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        for(Skill s: after_start) {</span>
+<span class="fc" id="L153">            Card card=CardContain(building, s.getname());</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            if(card!=null) card.skill.Special(this, app);</span>
+        }
+<span class="fc" id="L156">    }</span>
+
+    /**
+     * Attempts to build a district card at the specified hand index.
+     * Validates build limits, gold costs, and triggers related skill effects.
+     *
+     * @param place the index in the hand (0-based) of the card to build
+     */
+    public void OnBuilding(int place){
+        //place [0,cards.size-1]
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        if(is_killed){</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">            if(!AIplayer) println(&quot;build failed\nYou cannot build in this round because you were assassinated&quot;);</span>
+<span class="fc" id="L168">            return;</span>
+        }
+<span class="fc bfc" id="L170" title="All 4 branches covered.">        if(num_built==(ch==GameCharacter.Architect?3:1)) {</span>
+<span class="fc" id="L171">            println(&quot;build failed\nYou cannot build more districts in this round&quot;);</span>
+<span class="fc" id="L172">            return;</span>
+        }
+<span class="fc" id="L174">        Card card=cards.get(place);</span>
+        //Factory
+<span class="fc bfc" id="L176" title="All 4 branches covered.">        int spend=card.cost-(card.color.equals(&quot;purple&quot;) &amp;&amp; CardContain(building, &quot;Factory&quot;)!=null?1:0);</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        if(gold&lt;spend){</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">            if(!AIplayer) println(&quot;build failed\nNot enough gold coins&quot;);</span>
+<span class="fc" id="L179">            return;</span>
+        }
+        //Quarry
+<span class="fc" id="L182">        Card Quarry=CardContain(building, &quot;Quarry&quot;);</span>
+<span class="fc bfc" id="L183" title="All 6 branches covered.">        if((Quarry==null &amp;&amp; CardContain(building, card.name)!=null) || </span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">           (Quarry!=null &amp;&amp; (boolean)Quarry.skill.Special(this, null))){</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">            if(!AIplayer) println(&quot;build failed\nNo more duplicate districts can be built&quot;);</span>
+<span class="fc" id="L186">            return;</span>
+        }
+<span class="fc" id="L188">        println(&quot;Player built &quot;+card.toString());</span>
+<span class="fc" id="L189">        building.add(card);</span>
+<span class="fc" id="L190">        cards.remove(card);</span>
+<span class="fc" id="L191">        gold-=spend;</span>
+<span class="fc" id="L192">        num_built++;</span>
+
+
+<span class="fc" id="L195">        Skill[] after_build={Skill.Haunted_City, Skill.Laboratory, Skill.Smithy, Skill.Graveyard, </span>
+             Skill.Lighthouse, Skill.Armory, Skill.Museum, Skill.Bell_Tower, Skill.Throne_Room};
+<span class="fc bfc" id="L197" title="All 4 branches covered.">        for(Skill s: after_build) if(s==card.skill) card.skill.OnBuilding(this, app);</span>
+<span class="fc" id="L198">    }</span>
+    /**
+     * Executes end-of-turn skill effects for the player.
+     */
+    public void EndTurn(){
+
+<span class="fc" id="L204">        Skill[] end_turn={Skill.Poor_House, Skill.Park};</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        for(Skill s: end_turn) {</span>
+<span class="fc" id="L206">            Card card=CardContain(building, s.getname());</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">            if(card!=null) card.skill.Special(this, app);</span>
+        }
+<span class="fc" id="L209">    }</span>
+
+    /**
+     * Executes a full play sequence for the player's turn,
+     * including start, action, and end phases.
+     */
+    public void play_turn(){
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        if(!AIplayer) println(&quot;Your turn.&quot;);</span>
+<span class="fc" id="L217">        StartTurn();</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">        if(!is_killed) ch.CharacterAbility(this, app);</span>
+        String opt;
+        //int i, j;
+<span class="fc" id="L221">        List&lt;String&gt; valid_command=new ArrayList&lt;&gt;(Arrays.asList(</span>
+            &quot;hand&quot;, &quot;gold&quot;, &quot;build&quot;, &quot;citadel&quot;, &quot;list&quot;, &quot;city&quot;, &quot;action&quot;,
+            &quot;info&quot;, &quot;end&quot;, &quot;all&quot;, &quot;save&quot;, &quot;load&quot;, &quot;help&quot;, &quot;debug&quot;));
+
+            
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        if(AIplayer){</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">            if(app.is_debug){</span>
+<span class="fc" id="L228">                print(&quot;Debug: &quot;);</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">                for(Card card: cards) print(card.toString()+&quot;, &quot;);</span>
+<span class="fc" id="L230">                println(&quot;&quot;);</span>
+            }
+<span class="fc bfc" id="L232" title="All 2 branches covered.">            if(ch==GameCharacter.Magician){</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">                if(App.rand.nextBoolean()) app.Player_command(&quot;action swap&quot;, this, null);</span>
+<span class="fc" id="L234">                else app.Player_command(&quot;action redraw&quot;, this, null);</span>
+            }
+<span class="fc bfc" id="L236" title="All 2 branches covered.">            if(ch==GameCharacter.Warlord){</span>
+<span class="fc" id="L237">                app.Player_command(&quot;action destroy&quot;, this, null);</span>
+            }
+<span class="fc bfc" id="L239" title="All 2 branches covered.">            if(cards.size()!=0) </span>
+<span class="fc" id="L240">                app.Player_command(&quot;build &quot;+(App.rand.nextInt(cards.size())+1), this, null);</span>
+<span class="fc" id="L241">            print(&quot;&gt; &quot;);</span>
+<span class="fc" id="L242">            app.getInput_t();</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">            if(!app.is_load_end) return;</span>
+<span class="fc" id="L244">            EndTurn();</span>
+<span class="fc" id="L245">            return;</span>
+        }
+        
+        do{
+<span class="fc" id="L249">            print(&quot;&gt; &quot;);</span>
+<span class="fc" id="L250">            opt=app.getInput(valid_command.toArray());</span>
+<span class="fc" id="L251">            app.Player_command(opt, this, valid_command.toArray());</span>
+<span class="pc bpc" id="L252" title="1 of 2 branches missed.">            if(!app.is_load_end) return;</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">        }while(!opt.equals(&quot;end&quot;));</span>
+
+<span class="fc" id="L255">        EndTurn();</span>
+<span class="fc" id="L256">    }</span>
+
+    /**
+     * Performs the player's character-specific action (Magician and Warlord),
+     * unless the player has been assassinated this round.
+     *
+     * @param com the command or target identifier for the action
+     */
+    public void com_action(String com){
+<span class="fc bfc" id="L265" title="All 2 branches covered.">        if(is_killed){</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">            if(!AIplayer) println(&quot;Failed\nYou cannot use ability in this round because you were assassinated&quot;);</span>
+<span class="fc" id="L267">            return;</span>
+        }
+<span class="fc bfc" id="L269" title="All 2 branches covered.">        if(ch==GameCharacter.Magician) ch.CharacterAbility(this, app, com);</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">        else if(ch==GameCharacter.Warlord) ch.CharacterAbility(this, app, com);</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">        else if(!AIplayer) println(&quot;Your character no more action&quot;);</span>
+<span class="fc" id="L272">    }</span>
+    /**
+     * Attempts to build a card from the player's hand into their city.
+     * Validates the input index and processes the build action accordingly.
+     *
+     * @param place the string representing the index of the card to build
+     */
+    public void com_build(String place){
+        int num;
+        try{
+<span class="fc" id="L282">            num=Integer.parseInt(place);</span>
+<span class="pc bpc" id="L283" title="1 of 4 branches missed.">            if(num&lt;1 || num&gt;cards.size()) throw new NumberFormatException();</span>
+<span class="fc" id="L284">        }catch(NumberFormatException e){</span>
+<span class="fc" id="L285">            println(&quot;build failed, parameter error&quot;);</span>
+<span class="fc" id="L286">            return;</span>
+<span class="fc" id="L287">        }</span>
+<span class="fc" id="L288">        OnBuilding(num-1);</span>
+<span class="fc" id="L289">    }</span>
+    /**
+     * Ends the player's turn and resets any temporary flags.
+     */
+<span class="fc" id="L293">    public void com_end(){}</span>
+    /**
+     * Displays the player's current hand of cards in a numbered list.
+     */
+    public void com_hand(){
+<span class="fc" id="L298">        println(&quot;You have &quot;+gold+&quot; gold. Cards in hand:&quot;);</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        for(int i=0;i&lt;cards.size();i++) println((i+1)+&quot;. &quot;+cards.get(i).toString());</span>
+<span class="fc" id="L300">    }</span>
+    /**
+     * Displays the amount of gold the player possesses.
+     */
+    public void com_gold(){
+<span class="fc" id="L305">        println(&quot;You have &quot;+gold+&quot; gold.&quot;);</span>
+<span class="fc" id="L306">    }</span>
+    /**
+     * Displays the list of buildings the player has constructed.
+     */
+    public void com_citadel(){
+<span class="fc bfc" id="L311" title="All 2 branches covered.">        for(int i=0;i&lt;building.size();i++) println((i+1)+&quot;. &quot;+building.get(i).toString());</span>
+<span class="fc" id="L312">    }</span>
+    /**
+     * Displays a summary of the player's hand size, gold, and constructed city.
+     */
+    public void com_all(){
+<span class="fc" id="L317">        print(&quot;cards=&quot;+cards.size()+&quot; gold=&quot;+gold+&quot; city=&quot;);</span>
+<span class="fc bfc" id="L318" title="All 2 branches covered.">        if(building.size()&gt;0) print(building.get(0).toString());</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">        for(int i=1;i&lt;building.size();i++) print(&quot;, &quot;+building.get(i).toString());</span>
+<span class="fc" id="L320">        println(&quot;&quot;);</span>
+<span class="fc" id="L321">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

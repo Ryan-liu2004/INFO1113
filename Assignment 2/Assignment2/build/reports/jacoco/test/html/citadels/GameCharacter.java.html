@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameCharacter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Assignment2</a> &gt; <a href="index.source.html" class="el_package">citadels</a> &gt; <span class="el_source">GameCharacter.java</span></div><h1>GameCharacter.java</h1><pre class="source lang-java linenums">/*
+Haochen Liu
+hliu0010
+540243105
+*/
+package citadels;
+
+import java.util.List;
+/**
+ * Enum representing the characters in the Citadels game.
+ * Each character has a unique turn order number and a special ability description.
+ */
+<span class="fc" id="L13">public enum GameCharacter{</span>
+    /**
+     * Assassin (1): Select another character to kill; the killed character loses their turn.
+     */
+<span class="fc" id="L17">    Assassin(1,&quot;Select another character whom you wish to kill. The killed character loses their turn.&quot;){</span>
+         /**
+         * Assassin ability: choose and assassinate another character, preventing them from taking their turn.
+         *
+         * @param p   the player invoking the ability
+         * @param app the main application
+         */
+        @Override
+        public void CharacterAbility(Player p, App app){
+            String opt;
+            int i, j;
+<span class="fc bfc" id="L28" title="All 2 branches covered.">            if(!p.AIplayer){</span>
+<span class="fc" id="L29">                p.print(&quot;Who do you want to kill? Choose a character from 2-8:\n&gt; &quot;);</span>
+<span class="fc" id="L30">                Object[] tmp=new Object[7];</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">                for(i=2;i&lt;=8;i++) tmp[i-2]=i;</span>
+<span class="fc" id="L32">                opt=app.getInput_withoutcommand(tmp);</span>
+<span class="fc" id="L33">                j=Integer.parseInt(opt);</span>
+<span class="fc" id="L34">                p.println(&quot;You chose to kill the &quot;+GameCharacter.values()[j-1]);</span>
+<span class="fc" id="L35">            }</span>
+<span class="fc" id="L36">            else j=App.rand.nextInt(7)+2;</span>
+<span class="fc" id="L37">            Integer goal=app.Character_player.getOrDefault(GameCharacter.values()[j-1], null);</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">            if(goal!=null) app.player[goal].is_killed=true;</span>
+<span class="fc" id="L39">        }</span>
+    },
+    /**
+     * Thief (2): Steal gold from another character.
+     */
+<span class="fc" id="L44">    Thief(2, &quot;Select another character whom you wish to rob. When a player reveals that character to &quot;+ </span>
+                &quot;take his turn, you immediately take all of his gold. You cannot rob the Assassin or the killed &quot;+
+                &quot;character.&quot;){
+        /**
+         * Thief ability: steal all gold from the chosen character.
+         *
+         * @param p   the player invoking the ability
+         * @param app the main application
+         */
+        @Override
+        public void CharacterAbility(Player p, App app){
+            String opt;
+            int i, j;
+<span class="fc bfc" id="L57" title="All 2 branches covered.">            if(!p.AIplayer){</span>
+<span class="fc" id="L58">                p.print(&quot;Who do you want to steal from? Choose a character from 3-8:\n&gt; &quot;);</span>
+<span class="fc" id="L59">                Object[] tmp=new Object[6];</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">                for(i=3;i&lt;=8;i++) tmp[i-3]=i;</span>
+<span class="fc" id="L61">                opt=app.getInput_withoutcommand(tmp);</span>
+<span class="fc" id="L62">                j=Integer.parseInt(opt);</span>
+<span class="fc" id="L63">                p.println(&quot;You chose to steal from the &quot;+GameCharacter.values()[j-1]);</span>
+<span class="fc" id="L64">            }</span>
+<span class="fc" id="L65">            else j=App.rand.nextInt(6)+3;</span>
+<span class="fc" id="L66">            Integer goal=app.Character_player.getOrDefault(GameCharacter.values()[j-1], null);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            if(goal!=null) app.player[goal].is_stolen=true;</span>
+<span class="fc" id="L68">        }</span>
+    },
+    /**
+     * Magician (3): Exchange cards with another player or discard any number of cards and draw the same.
+     */
+<span class="fc" id="L73">    Magician(3, &quot;Can either exchange their hand with another player鈥檚, or discard any number of &quot;+</span>
+                &quot;district cards face down to the bottom of the deck and draw an equal number of cards from the &quot;+
+                &quot;district deck (can only do this once per turn).&quot;){
+<span class="fc" id="L76">        public int last_skill_round=0;   //record the time of skill usage</span>
+
+        /**
+         * Exchange cards
+         *
+         * @param p    the player invoking the ability
+         * @param app  the main application
+         */
+        private void swap(Player p, App app){
+            String opt;
+            int i, j;
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            if(!p.AIplayer){</span>
+<span class="fc" id="L88">                app.print(&quot;Who do you want to swap from? Choose a player from 2-&quot;+App.n+&quot;:\n&gt; &quot;);</span>
+<span class="fc" id="L89">                Object[] tmp=new Object[App.n-1];</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">                for(i=2;i&lt;=App.n;i++) tmp[i-2]=i;</span>
+<span class="fc" id="L91">                opt=app.getInput_withoutcommand(tmp);</span>
+<span class="fc" id="L92">                j=Integer.parseInt(opt);</span>
+<span class="fc" id="L93">            }</span>
+            else{
+<span class="fc" id="L95">                j=App.rand.nextInt(App.n)+1;</span>
+                //maximum cards
+<span class="fc" id="L97">                j=1;</span>
+<span class="fc bfc" id="L98" title="All 4 branches covered.">                for(i=2;i&lt;=App.n;i++) if(app.player[i].cards.size()&gt;app.player[j].cards.size()) j=i;</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">                if(app.player[j]==p) {redraw(p,app);return;}</span>
+            }
+<span class="fc" id="L101">            app.println(&quot;Player &quot;+j+&quot; exchange hands with the Magician&quot;);</span>
+<span class="fc" id="L102">            List&lt;Card&gt; tmp=app.player[j].cards;</span>
+<span class="fc" id="L103">            app.player[j].cards=p.cards;</span>
+<span class="fc" id="L104">            p.cards=tmp;</span>
+<span class="fc" id="L105">        }</span>
+        /**
+         * Discard and redraw
+         *
+         * @param p    the player invoking the ability
+         * @param app  the main application
+         */
+        private void redraw(Player p, App app){
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            if(p.cards.size()==0) return;</span>
+<span class="fc" id="L114">            int i, j, num=0;</span>
+            String opt;
+<span class="fc bfc" id="L116" title="All 2 branches covered.">            if(!p.AIplayer) {</span>
+                while(true){
+<span class="fc bfc" id="L118" title="All 2 branches covered.">                    if(p.cards.size()==0) break;</span>
+<span class="fc" id="L119">                    app.println(&quot;Please choose a card to discard: \&quot;discard &lt;option&gt;\&quot; or \&quot;q\&quot; to finish discard&quot;);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                    for(i=0;i&lt;p.cards.size();i++) p.println((i+1)+&quot;. &quot;+p.cards.get(i).toString());</span>
+<span class="fc" id="L121">                    p.print(&quot;&gt; &quot;);</span>
+<span class="fc" id="L122">                    Object[] tmp=new Object[p.cards.size()+1];</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">                    for(i=0;i&lt;p.cards.size();i++) tmp[i]=&quot;discard &quot;+(i+1);</span>
+<span class="fc" id="L124">                    tmp[p.cards.size()]=&quot;q&quot;;</span>
+<span class="fc" id="L125">                    opt=app.getInput_withoutcommand(tmp);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">                    if(opt.equals(&quot;q&quot;)) break;</span>
+<span class="fc" id="L127">                    j=Integer.parseInt(opt.split(&quot; &quot;)[1])-1;</span>
+<span class="fc" id="L128">                    num++;</span>
+<span class="fc" id="L129">                    App.deck.dis_push(p.cards.remove(j));</span>
+<span class="fc" id="L130">                }</span>
+            }
+            else{
+<span class="fc" id="L133">                App.deck.dis_push(p.cards.remove(0));</span>
+<span class="fc" id="L134">                num=1;</span>
+            }
+<span class="fc" id="L136">            app.println(&quot;Player discard &quot;+num+&quot; cards and draw &quot;+num+&quot; cards&quot;);</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">            for(i=0;i&lt;num;i++) p.drawCard();</span>
+<span class="fc" id="L138">        }</span>
+        /**
+         * Magician ability with command: exchange cards with another player or discard and redraw.
+         *
+         * @param p    the player invoking the ability
+         * @param app  the main application
+         * @param com  additional command
+         */
+        @Override
+        public void CharacterAbility(Player p, App app, String com){
+<span class="fc bfc" id="L148" title="All 2 branches covered.">            if(last_skill_round==App.round){</span>
+<span class="fc" id="L149">                app.println(&quot;You cannot use ability again&quot;);</span>
+<span class="fc" id="L150">                return;</span>
+            }
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            if(com.equals(&quot;swap&quot;)) swap(p, app);</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">            else if(com.equals(&quot;redraw&quot;)) redraw(p, app);</span>
+<span class="nc" id="L154">            else return;</span>
+<span class="fc" id="L155">            last_skill_round=App.round;</span>
+<span class="fc" id="L156">        }</span>
+    },
+     /**
+     * King (4): Collect income from all yellow (noble) districts and take first pick next round.
+     */
+<span class="fc" id="L161">    King(4, &quot;Gains one gold for each yellow (noble) district in their city. They receive the crown token &quot;+ </span>
+                &quot;and will be the first to choose characters on the next round.&quot;){
+        /**
+         * King extra resource: collect gold income from noble districts.
+         *
+         * @param p the player invoking the ability
+         */
+        @Override
+        public void ExtraResource(Player p){
+<span class="fc" id="L170">            int sum=0;</span>
+<span class="fc bfc" id="L171" title="All 4 branches covered.">            for(Card card: p.building) if(card.color.equals(&quot;yellow&quot;)) sum++;</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">            if(sum!=0) p.println(&quot;King collected &quot;+sum+&quot; gold from noble district&quot;);</span>
+<span class="fc" id="L173">            p.gold+=sum;</span>
+<span class="fc" id="L174">        }</span>
+        /**
+         * King ability: Take the crown.
+         *
+         * @param p   the player invoking the ability
+         * @param app the main application
+         */
+        @Override
+        public void CharacterAbility(Player p, App app){
+<span class="fc" id="L183">            app.println(&quot;Player take the crown&quot;);</span>
+<span class="fc" id="L184">            App.crown=app.Character_player.get(GameCharacter.King);</span>
+<span class="fc" id="L185">            Skill.Throne_Room.extraResource();</span>
+<span class="fc" id="L186">        }</span>
+    },
+    /**
+     * Bishop (5): Collect income from all religious districts and is protected from the Warlord.
+     */
+<span class="fc" id="L191">    Bishop(5, &quot;Gains one gold for each blue (religious) district in their city. Their buildings cannot be &quot;+</span>
+                &quot;destroyed by the Warlord, unless they are killed by the Assassin.&quot;){
+        /**
+         * Bishop extra resource: collect gold income from religious districts.
+         *
+         * @param p the player invoking the ability
+         */
+        @Override
+        public void ExtraResource(Player p){
+<span class="fc" id="L200">            int sum=0;</span>
+<span class="fc bfc" id="L201" title="All 4 branches covered.">            for(Card card: p.building) if(card.color.equals(&quot;blue&quot;)) sum++;</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">            if(sum!=0) p.println(&quot;Bishop collected &quot;+sum+&quot; gold from religious district&quot;);</span>
+<span class="fc" id="L203">            p.gold+=sum;</span>
+<span class="fc" id="L204">        }</span>
+    },
+    /**
+     * Merchant (6): Collect extra gold and gains one extra gold.
+     */
+<span class="fc" id="L209">    Merchant(6, &quot;Gains one gold for each green (trade) district in their city. Gains one extra gold.&quot;){</span>
+        /**
+         * Merchant extra resource: gain extra gold and collect gold income from trade districts.
+         *
+         * @param p the player invoking the ability
+         */
+        @Override
+        public void ExtraResource(Player p){
+<span class="fc" id="L217">            int sum=0;</span>
+<span class="fc bfc" id="L218" title="All 4 branches covered.">            for(Card card: p.building) if(card.color.equals(&quot;green&quot;)) sum++;</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            if(sum!=0) p.println(&quot;Merchant collected &quot;+sum+&quot; gold from trade district&quot;);</span>
+<span class="fc" id="L220">            p.println(&quot;Merchant gained extra 1 gold&quot;);</span>
+<span class="fc" id="L221">            p.gold+=sum+1;</span>
+<span class="fc" id="L222">        }</span>
+    },
+    /**
+     * Architect (7): Draw two extra cards and may build up to three districts.
+     */
+<span class="fc" id="L227">    Architect(7, &quot;Gains two extra district cards. Can build up to 3 districts per turn.&quot;){</span>
+        /**
+         * Architect extra resource: draw two additional cards.
+         *
+         * @param p the player invoking the ability
+         */
+        @Override
+        public void ExtraResource(Player p){
+<span class="fc" id="L235">            p.println(&quot;Architect gained extra 2 cards&quot;);</span>
+<span class="fc" id="L236">            p.drawCard();</span>
+<span class="fc" id="L237">            p.drawCard();</span>
+<span class="fc" id="L238">        }</span>
+    },
+    /**
+     * Warlord (8): Destroy a district by paying gold equal to its cost minus 1.
+     */
+<span class="fc" id="L243">    Warlord(8, &quot;Gains one gold for each red (military) district in their city. You can destroy one district &quot;+</span>
+                &quot;of your choice by paying one fewer gold than its building cost. You cannot destroy a district in a &quot; +
+                &quot;city with 8 or more districts.&quot;){
+        /**
+         * Warlord extra resource: collect gold income from military districts.
+         *
+         * @param p the player invoking the ability
+         */
+        @Override
+        public void ExtraResource(Player p){
+<span class="fc" id="L253">            int sum=0;</span>
+<span class="fc bfc" id="L254" title="All 4 branches covered.">            for(Card card: p.building) if(card.color.equals(&quot;red&quot;)) sum++;</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">            if(sum!=0) p.println(&quot;Warlord collected &quot;+sum+&quot; gold from military district&quot;);</span>
+<span class="fc" id="L256">            p.gold+=sum;</span>
+<span class="fc" id="L257">        }   </span>
+        /**
+         * Warlord ability: destroy an opponent's district at reduced cost.
+         *
+         * @param p   the player invoking the ability
+         * @param app the main application
+         */
+        @Override
+        public void CharacterAbility(Player p, App app, String com){
+<span class="pc bpc" id="L266" title="1 of 2 branches missed.">            if(!com.equals(&quot;destroy&quot;)) return;</span>
+            String opt;
+            int i, j;
+<span class="fc bfc" id="L269" title="All 2 branches covered.">            if(!p.AIplayer){</span>
+<span class="fc" id="L270">                app.print(&quot;Who do you want to destroy? Choose a player from 1-&quot;+App.n+&quot;:\n&gt; &quot;);</span>
+<span class="fc" id="L271">                Object[] tmp=new Object[App.n];</span>
+<span class="fc bfc" id="L272" title="All 2 branches covered.">                for(i=1;i&lt;=App.n;i++) tmp[i-1]=i;</span>
+<span class="fc" id="L273">                opt=app.getInput_withoutcommand(tmp);</span>
+<span class="fc" id="L274">                j=Integer.parseInt(opt);</span>
+<span class="fc" id="L275">            }</span>
+            else{
+<span class="fc" id="L277">                j=1;</span>
+<span class="fc bfc" id="L278" title="All 4 branches covered.">                for(i=2;i&lt;=App.n;i++) if(app.player[j].ch!=GameCharacter.Warlord &amp;&amp; </span>
+<span class="fc bfc" id="L279" title="All 2 branches covered.">                    app.player[j].building.size()&lt;app.player[i].building.size()) j=i;</span>
+            }
+<span class="fc bfc" id="L281" title="All 2 branches covered.">            if(app.player[j].building.size()==0){</span>
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">                if(!p.AIplayer) app.println(&quot;This player's city has not any district&quot;);</span>
+<span class="fc" id="L283">                return;</span>
+            }
+<span class="fc bfc" id="L285" title="All 2 branches covered.">            if(app.player[j].building.size()&gt;=App.end_building_num){</span>
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">                if(!p.AIplayer) app.println(&quot;You cannot destroy a completed city&quot;);</span>
+<span class="fc" id="L287">                return;</span>
+            }
+
+            //execute delete
+<span class="fc" id="L291">            int index=j;</span>
+<span class="fc" id="L292">            Player new_p=app.player[j];</span>
+<span class="fc" id="L293">            List&lt;Card&gt; goal=new_p.building;</span>
+            
+            //Bishop
+<span class="pc bpc" id="L296" title="1 of 4 branches missed.">            if(new_p.ch==GameCharacter.Bishop &amp;&amp; !new_p.is_killed){</span>
+<span class="pc bpc" id="L297" title="1 of 2 branches missed.">                if(!p.AIplayer) p.println(&quot;You cannot destroy Bishop city&quot;);</span>
+<span class="fc" id="L298">                return;</span>
+            }
+
+<span class="fc bfc" id="L301" title="All 2 branches covered.">            if(!p.AIplayer){</span>
+<span class="fc" id="L302">                app.println(&quot;Please choose a district to destroy: \&quot;destroy &lt;option&gt;\&quot;&quot;);</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">                for(i=0;i&lt;goal.size();i++) p.println((i+1)+&quot;. &quot;+goal.get(i).toString());</span>
+<span class="fc" id="L304">                app.print(&quot;&gt; &quot;);</span>
+<span class="fc" id="L305">                String[] tmp=new String[goal.size()];</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">                for(i=0;i&lt;goal.size();i++) tmp[i]=&quot;destroy &quot;+(i+1);</span>
+<span class="fc" id="L307">                opt=app.getInput_withoutcommand(tmp);</span>
+<span class="fc" id="L308">                j=Integer.parseInt(opt.split(&quot; &quot;)[1])-1;</span>
+<span class="fc" id="L309">            }</span>
+            else{
+                //minimum cost
+<span class="fc" id="L312">                j=0;</span>
+<span class="fc bfc" id="L313" title="All 4 branches covered.">                for(i=1;i&lt;goal.size();i++) if(goal.get(i).cost&lt;goal.get(j).cost) j=i;</span>
+            }
+
+<span class="fc" id="L316">            Card card=goal.get(j);</span>
+            //Keep
+<span class="fc bfc" id="L318" title="All 2 branches covered.">            if(card.skill==Skill.Keep){</span>
+<span class="fc" id="L319">                card.skill.Special(new_p, app);</span>
+<span class="fc" id="L320">                return;</span>
+            }
+            //Great Wall
+<span class="fc bfc" id="L323" title="All 2 branches covered.">            int spend=new_p.CardContain(new_p.building, &quot;Great Wall&quot;)!=null?1:0;</span>
+<span class="fc" id="L324">            spend+=card.cost-1;</span>
+
+<span class="fc bfc" id="L326" title="All 2 branches covered.">            if(spend&gt;p.gold){</span>
+<span class="fc bfc" id="L327" title="All 2 branches covered.">                if(!p.AIplayer) p.println(&quot;You don't have enough gold&quot;);</span>
+<span class="fc" id="L328">                return;</span>
+            }
+
+<span class="fc bfc" id="L331" title="All 4 branches covered.">            if(p.AIplayer &amp;&amp; p.gold-spend&lt;3) return;</span>
+<span class="fc" id="L332">            p.println(&quot;Player &quot;+index+&quot;: &quot;+card.toString()+&quot; is destroyed&quot;);</span>
+<span class="fc" id="L333">            p.gold-=spend;</span>
+<span class="fc" id="L334">            card.skill.destroyed();</span>
+
+<span class="fc bfc" id="L336" title="All 2 branches covered.">            if(Skill.Graveyard.Special(p, card)!=null) goal.remove(j); </span>
+<span class="fc" id="L337">            else App.deck.dis_push(goal.remove(j));</span>
+<span class="fc" id="L338">        }</span>
+    };
+    
+    private int num;
+    private String text;
+    /**
+     * Constructs a GameCharacter with the specified order and ability description.
+     *
+     * @param num  the turn order number of this character
+     * @param text the description of the character's ability
+     */
+<span class="fc" id="L349">    private GameCharacter(int num, String text){</span>
+<span class="fc" id="L350">        this.num=num;</span>
+<span class="fc" id="L351">        this.text=text;</span>
+<span class="fc" id="L352">    }</span>
+    /**
+     * Applies extra resource gain for characters that collect outside of actions.
+     * Default implementation does nothing.
+     *
+     * @param p the player invoking the ability
+     */
+<span class="fc" id="L359">    public void ExtraResource(Player p){}</span>
+    /**
+     * Executes the character's ability.
+     * Default implementation does nothing.
+     *
+     * @param p    the player invoking the ability
+     * @param app  the main application
+     */
+<span class="fc" id="L367">    public void CharacterAbility(Player p, App app){}</span>
+    /**
+     * Executes the character's ability with a command string parameter.
+     * Some characters require additional command input.
+     * Default implementation does nothing.
+     *
+     * @param p    the player invoking the ability
+     * @param app  the main application
+     * @param com  additional command or target identifier
+     */
+<span class="nc" id="L377">    public void CharacterAbility(Player p, App app, String com){}</span>
+
+    /**
+     * Returns the turn order number of this character.
+     *
+     * @return the character's order number
+     */
+<span class="fc" id="L384">    public int getnum() {return num;}</span>
+    /**
+     * Returns the description text of this character's ability.
+     *
+     * @return the ability description
+     */
+<span class="fc" id="L390">    public String gettext() {return text;}</span>
+    /**
+     * Finds a GameCharacter by its name (case-insensitive).
+     *
+     * @param name the name of the character to find
+     * @return the matching GameCharacter or null if not found
+     */
+    public static GameCharacter findCharacter(String name){
+<span class="fc bfc" id="L398" title="All 2 branches covered.">        for(GameCharacter i: GameCharacter.values())</span>
+<span class="fc bfc" id="L399" title="All 2 branches covered.">            if (i.name().equalsIgnoreCase(name)) return i;</span>
+<span class="fc" id="L400">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

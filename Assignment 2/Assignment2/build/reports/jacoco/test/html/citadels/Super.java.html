@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Super.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Assignment2</a> &gt; <a href="index.source.html" class="el_package">citadels</a> &gt; <span class="el_source">Super.java</span></div><h1>Super.java</h1><pre class="source lang-java linenums">/*
+Haochen Liu
+hliu0010
+540243105
+*/
+package citadels;
+
+/**
+ * Provides basic input/output handling, logging, and state saving/loading capabilities.
+ * Supports input caching, logging user commands to a file, and restoring program state from a file.
+ */
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Super {
+    private static Scanner scan;
+    private final static String LOG_PATH=&quot;log&quot;;
+    private static PrintWriter logwriter;
+    private static List&lt;String&gt; save_cache, load_cache;
+    private final static int cache_MAXN=100;
+<span class="fc" id="L27">    private static boolean end_load, initialized=false;</span>
+<span class="fc" id="L28">    public String mode=&quot;guest&quot;;</span>
+
+    /**
+     * Constructor. Initializes input scanner and logging system.
+     * Ensures initialization occurs only once.
+     */
+<span class="fc" id="L34">    public Super(){</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        if(initialized) return;</span>
+<span class="fc" id="L36">        initialized=true;</span>
+<span class="fc" id="L37">        scan=new Scanner(System.in);</span>
+        try{
+<span class="fc" id="L39">            logwriter = new PrintWriter(new FileWriter(LOG_PATH));</span>
+<span class="fc" id="L40">            logwriter.close();</span>
+<span class="nc" id="L41">        }catch(IOException e){</span>
+<span class="nc" id="L42">            e.printStackTrace();</span>
+<span class="fc" id="L43">        }</span>
+<span class="fc" id="L44">        save_cache=new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L45">        end_load=true;</span>
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Resets the scanner to standard input. For testing purposes.
+     */
+<span class="fc" id="L51">    public static void testing_resetinput() {scan=new Scanner(System.in);}</span>
+    //public void print(Object str) {System.out.print(str);}
+    //public void println(Object str) {System.out.println(str);}
+
+    /**
+     * Prints a message without a newline, unless in loading mode.
+     * @param str the object to print
+     */
+<span class="fc bfc" id="L59" title="All 2 branches covered.">    public void print(Object str) {if(end_load) System.out.print(str);}</span>
+
+    /**
+     * Prints a message with a newline, unless in loading mode.
+     * @param str the object to print
+     */
+<span class="fc bfc" id="L65" title="All 2 branches covered.">    public void println(Object str) {if(end_load) System.out.println(str);}</span>
+
+    /**
+     * Throws a runtime exception with a custom message.
+     * @param message the error message
+     */
+<span class="nc" id="L71">    public void throwRE(String message) {throw new RuntimeException(message);}</span>
+
+    /**
+     * Reads the next line from user input or load cache, trimming whitespace.
+     * Automatically caches the input if not in loading mode.
+     * @return the trimmed line of input
+     */
+    public String nextLine(){
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if(!end_load){</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">            if(load_cache.size()!=0) return load_cache.remove(0);</span>
+<span class="fc" id="L81">            end_load=true;</span>
+<span class="fc" id="L82">            print(&quot;Data loaded successfully\nPlease enter the 'help' to see the available commands\n&gt; &quot;);</span>
+        }
+<span class="fc" id="L84">        String line=scan.nextLine().trim();</span>
+<span class="fc" id="L85">        cache_write(line);</span>
+<span class="fc" id="L86">        return line;</span>
+    }
+
+    /**
+     * Writes the current save cache to the log file.
+     * @param mode true to append, false to overwrite
+     */
+    private void log_write(boolean mode){
+        try{
+<span class="fc" id="L95">            logwriter = new PrintWriter(new FileWriter(LOG_PATH, mode));</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">            for(String str: save_cache) logwriter.println(str);</span>
+<span class="fc" id="L97">            save_cache.clear();</span>
+<span class="fc" id="L98">            logwriter.close();</span>
+<span class="nc" id="L99">        }catch(IOException  e){</span>
+<span class="nc" id="L100">            e.printStackTrace();</span>
+<span class="fc" id="L101">        }</span>
+<span class="fc" id="L102">    }</span>
+    /**
+     * Writes the current save cache to the log file in append mode.
+     */
+<span class="fc" id="L106">    private void log_write() {log_write(true);}</span>
+
+    /**
+     * Caches a line of user input for later saving. Ignores commands starting with 'save' or 'load'.
+     * @param line the user input line
+     */
+    private void cache_write(String line){
+<span class="fc bfc" id="L113" title="All 4 branches covered.">        if(line.startsWith(&quot;save&quot;) || line.startsWith(&quot;load&quot;)) return; </span>
+        //ignore the save and load command
+<span class="fc" id="L115">        save_cache.add(line);</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if(save_cache.size()&lt;=cache_MAXN) return;</span>
+<span class="nc" id="L117">        log_write();</span>
+<span class="nc" id="L118">    }</span>
+
+    /**
+     * Saves the current state (including input cache and random seed) to a specified file.
+     * @param path the file path to save to
+     * @param seed the random seed to save
+     */
+    public void com_save(String path, long seed){
+        //read log and write into specified file
+        try{
+<span class="fc" id="L128">            PrintWriter writer = new PrintWriter(path);</span>
+<span class="fc" id="L129">            log_write();</span>
+<span class="fc" id="L130">            writer.println(seed);</span>
+            try{
+<span class="fc" id="L132">                Scanner f_scan=new Scanner(new File(LOG_PATH));</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">                while(f_scan.hasNextLine()) writer.println(f_scan.nextLine());</span>
+<span class="fc" id="L134">                f_scan.close();</span>
+<span class="nc" id="L135">            }catch(FileNotFoundException e) {</span>
+<span class="nc" id="L136">                e.printStackTrace();</span>
+<span class="fc" id="L137">            }</span>
+<span class="fc" id="L138">            writer.close();</span>
+<span class="fc" id="L139">            println(&quot;Save Successfully&quot;);</span>
+<span class="nc" id="L140">        }catch(FileNotFoundException e){</span>
+<span class="nc" id="L141">            e.printStackTrace();</span>
+<span class="fc" id="L142">        }</span>
+<span class="fc" id="L143">    }</span>
+
+    /**
+     * Loads a previously saved state (including random seed and cached input) from a specified file.
+     * @param path the file path to load from
+     * @return the loaded random seed, or null if loading failed
+     */
+    public Long com_load(String path){
+        Scanner f_scan;
+        try{
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">            if(mode.equals(&quot;guest&quot;)) f_scan=new Scanner(new File(path));</span>
+<span class="fc" id="L154">            else f_scan=new Scanner(new File(System.getProperty(&quot;user.dir&quot;)+&quot;/src/test/resources/citadels/&quot;+path));</span>
+<span class="fc" id="L155">        }catch(FileNotFoundException e) {</span>
+            //e.printStackTrace();
+<span class="fc" id="L157">            return null;</span>
+<span class="fc" id="L158">        }</span>
+<span class="fc" id="L159">        long seed=Long.parseLong(f_scan.nextLine());  //load random seed</span>
+<span class="fc" id="L160">        load_cache=new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        while(f_scan.hasNextLine()) load_cache.add(f_scan.nextLine());</span>
+<span class="fc" id="L162">        f_scan.close();</span>
+<span class="fc" id="L163">        save_cache.clear();</span>
+<span class="fc" id="L164">        save_cache = new ArrayList&lt;&gt;(load_cache);</span>
+<span class="fc" id="L165">        log_write(false);</span>
+<span class="fc" id="L166">        end_load=false;</span>
+<span class="fc" id="L167">        return seed;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

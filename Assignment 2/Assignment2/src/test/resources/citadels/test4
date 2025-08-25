@@ -1,0 +1,160 @@
+496934477546079780
+7
+thief
+t
+t
+t
+t
+t
+t
+t
+gold
+4
+t
+hand
+end
+t
+t
+t
+t
+t
+t
+thief
+t
+t
+t
+t
+t
+t
+gold
+8
+hand
+build 4
+debug
+end
+t
+t
+t
+t
+t
+t
+magician
+t
+t
+t
+t
+t
+t
+t
+gold
+all
+action redraw
+discard 1
+discard 1
+discard 1
+hand
+build 2
+end
+t
+t
+t
+t
+t
+t
+t
+thief
+t
+t
+t
+t
+t
+gold
+8
+t
+hand
+build 2
+help
+yellow
+hand
+build 1
+end
+t
+t
+t
+t
+t
+t
+t
+t
+t
+t
+t
+thief
+t
+cards
+collect 2
+collect card 1
+8
+t
+t
+hand
+build 1
+t
+end
+t
+t
+t
+t
+t
+t
+t
+t
+t
+t
+t
+t
+bishop
+t
+t
+t
+t
+cards
+collect card 1
+build
+build 2
+end
+t
+t
+t
+t
+t
+t
+t
+t
+king
+t
+t
+t
+t
+t
+t
+t
+t
+all
+hand
+magician
+t
+t
+t
+t
+t
+t
+t
+t
+gold
+all
+action swap
+5
+hand
+list
+build 3

@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="zh"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>App.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Assignment2</a> &gt; <a href="index.source.html" class="el_package">citadels</a> &gt; <span class="el_source">App.java</span></div><h1>App.java</h1><pre class="source lang-java linenums">/*
+Haochen Liu
+hliu0010
+540243105
+*/
+package citadels;
+
+/**
+ * Main application class that controls the game flow for Citadels.
+ * It initializes the game, manages the main loop, and handles user commands.
+ */
+import java.io.*;
+import java.util.*;
+
+public class App extends Super{
+    public static long seed;
+    public static Random rand;
+    public Player[] player;
+<span class="fc" id="L19">    public static int n, crown, round, end_building_num=8;</span>
+    private boolean is_end;
+    public boolean is_load_end, is_debug;
+    public static Deck deck;
+<span class="fc" id="L23">    public final String input_message=&quot;Please enter valid input&quot;,</span>
+        AIturn_message=&quot;It is not your turn. Press t to continue with other player turns.&quot;;
+<span class="fc" id="L25">    public final String[] default_command=new String[]{</span>
+            &quot;hand&quot;, &quot;gold&quot;, &quot;citadel&quot;, &quot;list&quot;, &quot;city&quot;, &quot;info&quot;, 
+            &quot;all&quot;, &quot;help&quot;, &quot;save&quot;, &quot;load&quot;, &quot;debug&quot;};
+    private Map&lt;String, String&gt; command;
+    public Map&lt;String, Card&gt; cardMap;
+    public Map&lt;String, Skill&gt; skillMap;
+    public Map&lt;GameCharacter, Integer&gt; Character_player;
+
+     /**
+     * Prints the given object without a newline.
+     *
+     * @param str the object to print
+     */
+    @Override
+<span class="fc" id="L39">    public void print(Object str) {super.print(str);}</span>
+    /**
+     * Prints the given object followed by a newline.
+     *
+     * @param str the object to print
+     */
+    @Override
+<span class="fc" id="L46">    public void println(Object str) {super.println(str);}</span>
+    /**
+     * Reads and returns the next line of user input.
+     *
+     * @return the next line of input
+     */
+    @Override
+<span class="fc" id="L53">    public String nextLine() {return super.nextLine();}</span>
+    
+    /**
+     * Prompts the user for input from a set of allowed options with a custom message.
+     *
+     * @param key     an array of allowed input options
+     * @param message the prompt message to display
+     * @return the user's vaild input
+     */
+    public String getInput(Object[] key, String message){
+        String res;
+<span class="fc" id="L64">        boolean input_flag=false;</span>
+        do{
+<span class="fc" id="L66">            res=nextLine().toLowerCase();</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">            for(Object i: key)</span>
+            {
+<span class="fc" id="L69">                String tmp=i.toString().toLowerCase();</span>
+<span class="fc bfc" id="L70" title="All 4 branches covered.">                if((res.startsWith(tmp) &amp;&amp; command.containsKey(res)) || </span>
+<span class="fc bfc" id="L71" title="All 4 branches covered.">                   (tmp.equals(&quot;save&quot;) &amp;&amp; res.startsWith(&quot;save &quot;)) || </span>
+<span class="fc bfc" id="L72" title="All 4 branches covered.">                   (tmp.equals(&quot;load&quot;) &amp;&amp; res.startsWith(&quot;load &quot;)) ||</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">                   (res.startsWith(&quot;build &quot;)))</span>
+<span class="fc" id="L74">                    input_flag=true;</span>
+            }
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            if(!input_flag) print(message+&quot;\n&gt; &quot;);   </span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        }while(!input_flag);</span>
+<span class="fc" id="L78">        return res;</span>
+    }
+    /**
+     * Handles input in 't' mode, processing commands until loading is complete.
+     */
+    public void getInput_t() {
+<span class="fc" id="L84">        String[] vaild_command=Arrays.copyOf(default_command, default_command.length + 1);</span>
+<span class="fc" id="L85">        vaild_command[vaild_command.length-1]=&quot;t&quot;;</span>
+        String opt;
+        while(true){
+<span class="fc" id="L88">            opt=getInput(vaild_command, AIturn_message);</span>
+<span class="fc" id="L89">            Player_command(opt, player[1], vaild_command);</span>
+<span class="fc bfc" id="L90" title="All 4 branches covered.">            if(!is_load_end || opt.equals(&quot;t&quot;)) return;</span>
+<span class="fc" id="L91">            print(&quot;&gt; &quot;);</span>
+        }
+    }
+    /**
+     * Prompts the user for input from a set of allowed options with a custom message.
+     *
+     * @param key     an array of allowed input options
+     * @return the user's input
+     */
+<span class="fc" id="L100">    public String getInput(Object[] key) {return getInput(key, input_message);}</span>
+    /**
+     * Prompts the user for input from a set of allowed options without parsing commands, using a custom message.
+     *
+     * @param key     an array of allowed input options
+     * @param message the prompt message to display
+     * @return the user's vaild input
+     */
+    public String getInput_withoutcommand(Object[] key, String message){
+        String res;
+<span class="fc" id="L110">        boolean input_flag=false;</span>
+        do{
+<span class="fc" id="L112">            res=nextLine().toLowerCase();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            for(Object i: key)</span>
+            {
+<span class="fc" id="L115">                String tmp=i.toString().toLowerCase();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                if(res.equals(tmp))</span>
+<span class="fc" id="L117">                    input_flag=true;</span>
+            }
+<span class="fc bfc" id="L119" title="All 2 branches covered.">            if(!input_flag) print(message+&quot;\n&gt; &quot;);   </span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        }while(!input_flag);</span>
+<span class="fc" id="L121">        return res;</span>
+    }
+    /**
+     * Prompts the user for input from a set of allowed options without parsing commands, using a custom message.
+     *
+     * @param key     an array of allowed input options
+     * @return the user's vaild input
+     */
+<span class="fc" id="L129">    public String getInput_withoutcommand(Object[] key) {return getInput_withoutcommand(key, input_message);}</span>
+
+     /**
+     * Processes a player command and performs the corresponding action.
+     *
+     * @param comm the command keyword
+     * @param p    the current player
+     * @param args the command arguments
+     */
+    public void Player_command(String comm, Player p, Object[] args){
+<span class="fc" id="L139">        String[] opt=comm.split(&quot; &quot;);</span>
+<span class="fc bfc" id="L140" title="All 4 branches covered.">        if(opt[0].equals(&quot;city&quot;) || opt[0].equals(&quot;list&quot;)) </span>
+<span class="fc" id="L141">            opt[0]=&quot;citadel&quot;;</span>
+<span class="fc bfc" id="L142" title="All 14 branches covered.">        switch (opt[0]){</span>
+            case &quot;t&quot;:
+<span class="fc" id="L144">                break;</span>
+            case &quot;hand&quot;:
+<span class="fc" id="L146">                p.com_hand();</span>
+<span class="fc" id="L147">                break;</span>
+            case &quot;gold&quot;:
+<span class="fc" id="L149">                p.com_gold();</span>
+<span class="fc" id="L150">                break;</span>
+            case &quot;build&quot;:
+<span class="fc bfc" id="L152" title="All 2 branches covered.">                if(opt.length&gt;1) p.com_build(opt[1]);</span>
+<span class="fc" id="L153">                else println(command.getOrDefault(opt[0], &quot;&quot;));</span>
+<span class="fc" id="L154">                break;</span>
+            case &quot;citadel&quot;:
+<span class="fc" id="L156">                int num=1;</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                if(opt.length&gt;1) num=Integer.parseInt(opt[1]);</span>
+<span class="fc" id="L158">                println(&quot;Player &quot;+num+&quot; has built:&quot;);</span>
+<span class="fc" id="L159">                player[num].com_citadel();</span>
+<span class="fc" id="L160">                break;</span>
+            //case &quot;list&quot;
+            //case &quot;city&quot;
+            case &quot;action&quot;:
+<span class="fc bfc" id="L164" title="All 2 branches covered.">                if(opt.length==1) println(command.getOrDefault(opt[0], &quot;&quot;));</span>
+<span class="fc" id="L165">                else p.com_action(opt[1]);</span>
+<span class="fc" id="L166">                break;</span>
+            case &quot;info&quot;:
+<span class="fc bfc" id="L168" title="All 2 branches covered.">                if(opt.length==1) println(command.getOrDefault(opt[0], &quot;&quot;));</span>
+                else{
+<span class="fc" id="L170">                    GameCharacter tmp=GameCharacter.findCharacter(opt[1]);</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">                    if(tmp==null) println(&quot;Information about &quot;+opt[1]+&quot;: &quot;+cardMap.get(opt[1]).text);</span>
+<span class="fc" id="L172">                    else println(&quot;Information about &quot;+tmp.name()+&quot;: &quot;+tmp.gettext());</span>
+                }
+<span class="fc" id="L174">                break;</span>
+            case &quot;end&quot;:
+<span class="fc" id="L176">                println(&quot;You ended your turn.&quot;);</span>
+<span class="fc" id="L177">                p.com_end();</span>
+<span class="fc" id="L178">                break;</span>
+            case &quot;all&quot;:
+<span class="fc" id="L180">                print(&quot;Player 1 (you): &quot;);</span>
+<span class="fc" id="L181">                player[1].com_all();</span>
+<span class="fc bfc" id="L182" title="All 2 branches covered.">                for(int i=2;i&lt;=n;i++){</span>
+<span class="fc" id="L183">                    println(&quot;&quot;);</span>
+<span class="fc" id="L184">                    print(&quot;Player &quot;+i+&quot;: &quot;);</span>
+<span class="fc" id="L185">                    player[i].com_all();</span>
+                }
+<span class="fc" id="L187">                break;</span>
+            case &quot;save&quot;:
+<span class="fc bfc" id="L189" title="All 2 branches covered.">                if(opt.length==1) println(&quot;save failed, missing parameters&quot;);</span>
+<span class="fc" id="L190">                else super.com_save(opt[1], seed);</span>
+<span class="fc" id="L191">                break;</span>
+            case &quot;load&quot;:
+                Long new_seed;
+<span class="fc bfc" id="L194" title="All 2 branches covered.">                if(opt.length==1) {println(&quot;load failed, missing parameters&quot;);break;}</span>
+                else {
+<span class="fc" id="L196">                    println(&quot;Loading data...&quot;);</span>
+<span class="fc" id="L197">                    new_seed=super.com_load(opt[1]);</span>
+                }
+<span class="fc bfc" id="L199" title="All 2 branches covered.">                if(new_seed==null){</span>
+<span class="fc" id="L200">                    println(&quot;load failed, parameter error&quot;);</span>
+<span class="fc" id="L201">                    break;</span>
+                }
+<span class="fc" id="L203">                seed=new_seed;</span>
+<span class="fc" id="L204">                is_load_end=false;</span>
+<span class="fc" id="L205">                break;</span>
+            case &quot;help&quot;:
+<span class="fc" id="L207">                println(&quot;Available commands:&quot;);</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">                for(int i=0;i&lt;args.length;i++) println(command.getOrDefault(args[i], &quot;&quot;));</span>
+<span class="fc" id="L209">                break;</span>
+            case &quot;debug&quot;:
+<span class="fc bfc" id="L211" title="All 2 branches covered.">                if(is_debug){</span>
+<span class="fc" id="L212">                    is_debug=false;</span>
+<span class="fc" id="L213">                    println(&quot;Disabled debug mode. You will no longer see all player's hands.&quot;);</span>
+                }
+                else{
+<span class="fc" id="L216">                    is_debug=true;</span>
+<span class="fc" id="L217">                    println(&quot;Enabled debug mode. You can now see all player's hands.&quot;);</span>
+                }
+<span class="fc" id="L219">                break;</span>
+            default:
+                break;
+        }
+<span class="fc" id="L223">    }</span>
+
+    /**
+     * Executes the phases of a single turn.
+     */
+    private void Turn_Phase(){
+<span class="fc" id="L229">        println(&quot;Character choosing is over, action round will now begin.\n&quot;+</span>
+            &quot;================================\n&quot;+
+            &quot;TURN PHASE\n&quot;+
+            &quot;================================&quot;);
+
+        int i, num;
+<span class="fc" id="L235">        GameCharacter ch=null;</span>
+        
+<span class="fc" id="L237">        Character_player=new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">        for(i=1;i&lt;=n;i++) {</span>
+<span class="fc" id="L239">            player[i].is_killed=false;</span>
+<span class="fc" id="L240">            player[i].is_stolen=false;</span>
+<span class="fc" id="L241">            Character_player.put(player[i].ch, i);</span>
+        }
+<span class="fc bfc" id="L243" title="All 2 branches covered.">        for(num=1;num&lt;=8;num++){</span>
+<span class="fc bfc" id="L244" title="All 4 branches covered.">            for(GameCharacter g: GameCharacter.values()) if(g.getnum()==num) ch=g;</span>
+<span class="fc" id="L245">            println(num+&quot;: &quot;+ch.name());</span>
+<span class="fc" id="L246">            i=Character_player.getOrDefault(ch, -1);</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">            if(i==-1){</span>
+<span class="fc" id="L248">                print(&quot;No one is the &quot;+ch.name()+&quot;\n&gt; &quot;);</span>
+<span class="fc" id="L249">                getInput_t();</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">                if(!is_load_end) return;</span>
+                continue;
+            }
+<span class="fc" id="L253">            println(&quot;Player &quot;+i+&quot; is the &quot;+ch.name());</span>
+<span class="fc" id="L254">            Player p=player[i];</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">            if(p.is_killed){</span>
+<span class="fc" id="L256">                println(&quot;Player &quot;+i+&quot; loses their turn because they were assassinated.&quot;);</span>
+                //king need to gain crown
+<span class="fc bfc" id="L258" title="All 2 branches covered.">                if(p.ch==GameCharacter.King) p.ch.CharacterAbility(p, this);</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">                if((boolean)Skill.Hospital.Special(p, this)){</span>
+<span class="fc" id="L260">                    println(&quot;Hospital is triggered&quot;);</span>
+                }
+                else continue;
+            }
+<span class="fc bfc" id="L264" title="All 2 branches covered.">            else if(p.is_stolen){</span>
+<span class="fc" id="L265">                println(&quot;The Thief steals &quot;+p.gold+&quot; gold from the &quot;+p.ch.name()+&quot; (Player &quot;+i+&quot;)&quot;);</span>
+<span class="fc" id="L266">                player[Character_player.get(GameCharacter.Thief)].gold+=p.gold;</span>
+<span class="fc" id="L267">                p.gold=0;</span>
+            }
+<span class="fc" id="L269">            p.play_turn();</span>
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">            if(!is_load_end) return;</span>
+        }
+<span class="fc" id="L272">    } </span>
+
+    /**
+     * Manages the character selection phase.
+     */
+    private void Selection_Phase(){
+<span class="fc" id="L278">        println(&quot;================================\n&quot;+</span>
+            &quot;SELECTION PHASE\n&quot;+
+            &quot;================================&quot;);
+<span class="fc" id="L281">        List&lt;GameCharacter&gt; l=new ArrayList&lt;&gt;(Arrays.asList(GameCharacter.values()));</span>
+<span class="fc" id="L282">        GameCharacter faceup, facedown=l.remove(rand.nextInt(l.size()));  //remove mystery character</span>
+<span class="fc" id="L283">        println(&quot;A mystery character was removed.&quot;);</span>
+
+        int i, j, num;
+        String opt;
+<span class="fc" id="L287">        String[] valid_command=default_command;</span>
+    
+<span class="fc bfc" id="L289" title="All 2 branches covered.">        for(i=0;i&lt;6-n;i++){</span>
+            do{
+<span class="fc" id="L291">                faceup=l.get(rand.nextInt(l.size()));</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">            }while(faceup==GameCharacter.King);</span>
+<span class="fc" id="L293">            l.remove(faceup);</span>
+<span class="fc" id="L294">            println(faceup.name()+&quot; was removed.&quot;);</span>
+        }
+
+<span class="fc" id="L297">        println(&quot;Player &quot;+crown+&quot; is the crowned player and goes first.&quot;);</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">        for(i=crown;i&lt;n+crown;i++){</span>
+<span class="fc bfc" id="L299" title="All 4 branches covered.">            if(i==n+crown-1 &amp;&amp; n==7) l.add(facedown);</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">            num=i&gt;n?i-n:i;</span>
+<span class="fc" id="L301">            println(&quot;Player &quot;+num+&quot; chose a character.&quot;);</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">            if(player[num].AIplayer) {</span>
+<span class="fc" id="L303">                print(&quot;&gt; &quot;);</span>
+<span class="fc" id="L304">                getInput_t();</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">                if(!is_load_end) return;</span>
+<span class="fc" id="L306">                opt=l.get(rand.nextInt(l.size())).toString().toLowerCase();</span>
+            }
+            else{
+                do{
+<span class="fc" id="L310">                    println(&quot;Choose your character or enter commands. Available characters:&quot;);</span>
+<span class="fc" id="L311">                    print(l.get(0).name());</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">                    for(j=1;j&lt;l.size();j++) print(&quot;, &quot;+l.get(j).name());</span>
+<span class="fc" id="L313">                    print(&quot;\n&gt; &quot;);</span>
+<span class="fc" id="L314">                    Object[] tmp=new Object[valid_command.length+l.size()];</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">                    for(j=0;j&lt;valid_command.length;j++) tmp[j]=valid_command[j];</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">                    for(j=valid_command.length;j&lt;tmp.length;j++) tmp[j]=l.get(j-valid_command.length);</span>
+<span class="fc" id="L317">                    opt=getInput(tmp);</span>
+<span class="fc" id="L318">                    Player_command(opt, player[num], valid_command);</span>
+<span class="fc bfc" id="L319" title="All 2 branches covered.">                    if(!is_load_end) return;</span>
+
+<span class="fc bfc" id="L321" title="All 2 branches covered.">                }while(!command.getOrDefault(opt, &quot;&quot;).equals(&quot;Character&quot;));</span>
+            }
+<span class="fc" id="L323">            player[num].setCharacter(opt);</span>
+<span class="fc" id="L324">            l.remove(GameCharacter.findCharacter(opt));</span>
+        }
+<span class="fc" id="L326">    }</span>
+
+    /**
+     * Calculates final scores and displays game end results.
+     */
+    private void Game_End(){
+<span class="fc" id="L332">        println(&quot;Game End!&quot;);</span>
+        int i, j, maxn;
+        Player p;
+        Map&lt;String, Boolean&gt; map; 
+<span class="fc" id="L336">        int[] score=new int[n+1];</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">        for(i=1;i&lt;=n;i++)</span>
+        {
+<span class="fc" id="L339">            score[i]=0;</span>
+<span class="fc" id="L340">            p=player[i];</span>
+<span class="fc" id="L341">            map=new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">            for(Card card: p.building) {</span>
+<span class="fc" id="L343">                score[i]+=card.cost+card.skill.extraScore(p);</span>
+<span class="fc" id="L344">                String tmp=card.color;</span>
+                //Haunted City
+<span class="fc bfc" id="L346" title="All 2 branches covered.">                if(card.skill==Skill.Haunted_City) tmp=(String)card.skill.Special(p, this);</span>
+<span class="fc" id="L347">                map.put(tmp, Boolean.TRUE);</span>
+<span class="fc" id="L348">            }</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">            if(map.size()==5) score[i]+=3;</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">            if(p.building.size()&gt;=end_building_num) score[i]+=2;</span>
+        }
+<span class="fc bfc" id="L352" title="All 2 branches covered.">        for(GameCharacter g: GameCharacter.values()){</span>
+<span class="fc" id="L353">            j=Character_player.getOrDefault(g, 0);</span>
+<span class="fc bfc" id="L354" title="All 4 branches covered.">            if(j!=0 &amp;&amp; player[j].building.size()&gt;=end_building_num) score[j]+=2;</span>
+        }
+<span class="fc bfc" id="L356" title="All 2 branches covered.">        for(i=1;i&lt;=n;i++) println(&quot;Player &quot;+i+&quot; has total &quot;+score[i]+&quot; points&quot;);</span>
+<span class="fc" id="L357">        maxn=1;</span>
+<span class="fc bfc" id="L358" title="All 2 branches covered.">        for(i=2;i&lt;=n;i++)</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">            if(score[i]&gt;score[maxn]) maxn=i;</span>
+<span class="pc bpc" id="L360" title="1 of 4 branches missed.">            else if(score[i]==score[maxn] &amp;&amp; player[i].ch.ordinal()&gt;player[maxn].ch.ordinal()) maxn=i;</span>
+<span class="fc" id="L361">        println(&quot;Congratulations! Player &quot;+maxn+&quot; wins!&quot;);</span>
+<span class="fc" id="L362">    }</span>
+
+    /**
+     * Initializes card and skill mappings.
+     */
+    private void CardSetup(){
+<span class="fc" id="L368">        InputStream input = App.class.getResourceAsStream(&quot;/citadels/cards.tsv&quot;);</span>
+<span class="pc bpc" id="L369" title="1 of 2 branches missed.">        if(input == null) {</span>
+<span class="nc" id="L370">            println(&quot;cards.tsv not found in resources.&quot;);</span>
+<span class="nc" id="L371">            return;</span>
+        }
+<span class="fc" id="L373">        Scanner filescan = new Scanner(input, &quot;UTF-8&quot;);</span>
+
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">        if (filescan.hasNextLine()) filescan.nextLine();</span>
+<span class="fc" id="L376">        skillMap=new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L377" title="All 2 branches covered.">        for(Skill skill: Skill.values()) skillMap.put(skill.getname().toLowerCase(), skill);</span>
+<span class="fc bfc" id="L378" title="All 2 branches covered.">        while (filescan.hasNextLine()){</span>
+<span class="fc" id="L379">            String line=filescan.nextLine();</span>
+<span class="fc" id="L380">            String[] parts=line.split(&quot;\t&quot;);</span>
+<span class="pc bpc" id="L381" title="1 of 2 branches missed.">            if (parts.length&lt;4) super.throwRE(&quot;uncomplete card&quot;);</span>
+
+<span class="fc" id="L383">            int num=Integer.parseInt(parts[1]), cost=Integer.parseInt(parts[3]);</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">            while(num--!=0) </span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">                if(parts.length==5) </span>
+<span class="fc" id="L386">                    deck.push(new Card(parts[0], parts[2], cost, </span>
+<span class="fc" id="L387">                        parts[4], skillMap.getOrDefault(parts[0].toLowerCase(), Skill.NonePurple)));</span>
+                else
+<span class="fc" id="L389">                    deck.push(new Card(parts[0], parts[2], cost));</span>
+<span class="fc" id="L390">        }</span>
+<span class="fc" id="L391">        deck.shuffle();</span>
+<span class="fc" id="L392">        cardMap=new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L393" title="All 2 branches covered.">        for(Card card: deck.deck) cardMap.put(card.name.toLowerCase(), card);</span>
+<span class="fc" id="L394">        filescan.close();</span>
+<span class="fc" id="L395">    }</span>
+
+    /**
+     * Initializes player array and loading state.
+     */
+    private void SetPlayer(){
+<span class="fc" id="L401">        print(&quot;Enter how many players [4-7]:\n&gt; &quot;);</span>
+<span class="fc" id="L402">        String tmp=getInput_withoutcommand(new Object[]{4, 5, 6, 7,&quot;admin&quot;}, &quot;Please enter valid number&quot;);</span>
+
+<span class="fc bfc" id="L404" title="All 2 branches covered.">        if(tmp.equals(&quot;admin&quot;)){</span>
+<span class="fc" id="L405">            super.mode=&quot;admin&quot;;</span>
+<span class="fc" id="L406">            tmp=&quot;4&quot;;</span>
+        }
+
+<span class="fc" id="L409">        n=Integer.parseInt(tmp);</span>
+<span class="fc" id="L410">        player=new Player[n+1];</span>
+<span class="fc" id="L411">        println(&quot;Shuffling deck...\n&quot;+</span>
+              &quot;Adding characters...\n&quot;+
+              &quot;Dealing cards...\n&quot;+
+              &quot;Starting Citadels with &quot;+
+              n+
+              &quot; players...\n&quot;+
+              &quot;You are player 1\n&quot;);
+<span class="fc bfc" id="L418" title="All 2 branches covered.">        for(int i=2;i&lt;=n;i++) player[i]=new Player(this);</span>
+<span class="fc" id="L419">        player[1]=new Player(this, false);</span>
+<span class="fc" id="L420">        crown=rand.nextInt(n)+1;</span>
+<span class="fc" id="L421">    }</span>
+
+    /**
+     * Sets up the command lookup table for parsing user inputs.
+     */
+    private void SetCommand(){
+        //set command list
+        int i;
+<span class="fc" id="L429">        command.put(&quot;t&quot;, &quot;t: Process turns&quot;);</span>
+<span class="fc" id="L430">        command.put(&quot;hand&quot;, &quot;hand: shows cards in hand&quot;);</span>
+<span class="fc" id="L431">        command.put(&quot;gold&quot;, &quot;gold [p]: shows gold of a player&quot;);</span>
+<span class="fc" id="L432">        command.put(&quot;build&quot;, &quot;build &lt;place in hand&gt; : Builds a building into your city&quot;);</span>
+        //for(Card card: deck.deck) command.put(&quot;build &quot;+card.name.toLowerCase(), &quot;build&quot;);
+<span class="fc" id="L434">        command.put(&quot;citadel&quot;, &quot;citadel [p]: shows districts built by a player&quot;);</span>
+<span class="fc bfc" id="L435" title="All 2 branches covered.">        for(i=1;i&lt;=n;i++) command.put(&quot;citadel &quot;+i, &quot;citadel&quot;);</span>
+<span class="fc" id="L436">        command.put(&quot;list&quot;, &quot;list [p]: shows districts built by a player&quot;);</span>
+<span class="fc bfc" id="L437" title="All 2 branches covered.">        for(i=1;i&lt;=n;i++) command.put(&quot;list &quot;+i, &quot;list&quot;);</span>
+<span class="fc" id="L438">        command.put(&quot;city&quot;, &quot;city [p]: shows districts built by a player&quot;);</span>
+<span class="fc bfc" id="L439" title="All 2 branches covered.">        for(i=1;i&lt;=n;i++) command.put(&quot;city &quot;+i, &quot;city&quot;);</span>
+<span class="fc" id="L440">        command.put(&quot;action&quot;, </span>
+        &quot;action : Gives info about your special action and how to perform it\n&quot;+
+            &quot;   Magician: Magician may do \&quot;action swap\&quot; to swap their hand with the given player\n&quot;+
+            &quot;   Or do \&quot;action redraw\&quot; to choose to discard from their hand and redraw from the deck\n&quot;+
+            &quot;   Warlord: Warlord map do \&quot;action destroy\&quot; to destroy one district by paying one fewer gold than its building cost&quot;);
+<span class="fc" id="L445">        command.put(&quot;action swap&quot;, &quot;swap&quot;);</span>
+<span class="fc" id="L446">        command.put(&quot;action redraw&quot;, &quot;redraw&quot;);</span>
+<span class="fc" id="L447">        command.put(&quot;action destroy&quot;, &quot;redraw&quot;);</span>
+        
+<span class="fc" id="L449">        command.put(&quot;info&quot;, &quot;info [name/H]: show information about a character or building&quot;);</span>
+<span class="fc bfc" id="L450" title="All 2 branches covered.">        for(String card: cardMap.keySet()) command.put(&quot;info &quot;+card.toLowerCase(), &quot;info&quot;);</span>
+<span class="fc bfc" id="L451" title="All 2 branches covered.">        for(GameCharacter ch: GameCharacter.values()) command.put(&quot;info &quot;+ch.name().toLowerCase(), &quot;info&quot;);</span>
+<span class="fc bfc" id="L452" title="All 2 branches covered.">        for(GameCharacter ch: GameCharacter.values()) command.put(ch.name().toLowerCase(), &quot;Character&quot;);</span>
+<span class="fc" id="L453">        command.put(&quot;end&quot;, &quot;end: Ends your turn&quot;);</span>
+<span class="fc" id="L454">        command.put(&quot;all&quot;, &quot;all: shows all current game info&quot;);</span>
+<span class="fc" id="L455">        command.put(&quot;save&quot;, &quot;save: Saves the current game state info&quot;);</span>
+<span class="fc" id="L456">        command.put(&quot;load&quot;, &quot;load: Load the game state&quot;);</span>
+<span class="fc" id="L457">        command.put(&quot;debug&quot;, &quot;debug: Toggles debug mode&quot;);</span>
+<span class="fc" id="L458">        command.put(&quot;help&quot;, &quot;help: Display the help message&quot;);</span>
+<span class="fc" id="L459">    }</span>
+
+    /**
+     * Sets up the game, including random seed initialization, deck initialization, flags setup,
+     * player setup, and command registration.
+     */
+    public void Setup(){
+<span class="fc" id="L466">        rand=new Random(seed); </span>
+
+<span class="fc" id="L468">        deck=new Deck();</span>
+
+<span class="fc" id="L470">        is_end=false;</span>
+<span class="fc" id="L471">        is_debug=false;</span>
+<span class="fc" id="L472">        is_load_end=true;</span>
+<span class="fc" id="L473">        round=0;</span>
+        
+<span class="fc" id="L475">        CardSetup();</span>
+
+        int i;
+<span class="fc" id="L478">        command=new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L479" title="All 2 branches covered.">        for(i=1;i&lt;=7;i++) command.put(i+&quot;&quot;, &quot;i&quot;);</span>
+
+<span class="fc" id="L481">        SetPlayer();</span>
+
+<span class="fc" id="L483">        SetCommand();</span>
+<span class="fc" id="L484">    } </span>
+
+    /**
+     * Runs the game loop, including setup, selection phase, and turn phase.
+     */
+    public void gamestart(){
+<span class="fc" id="L490">        Setup();</span>
+        do{
+<span class="fc" id="L492">            round++;</span>
+<span class="fc" id="L493">            println(&quot;================================\n&quot;+</span>
+            &quot;ROUND &quot;+round+&quot;\n&quot;+
+            &quot;================================&quot;);
+<span class="fc" id="L496">            Selection_Phase();</span>
+<span class="fc bfc" id="L497" title="All 2 branches covered.">            if(!is_load_end) return;</span>
+<span class="fc" id="L498">            Turn_Phase();</span>
+<span class="pc bpc" id="L499" title="1 of 2 branches missed.">            if(!is_load_end) return;</span>
+            
+<span class="fc bfc" id="L501" title="All 4 branches covered.">            for(int i=1;i&lt;=n;i++) if(player[i].building.size()&gt;=end_building_num) is_end=true;</span>
+<span class="fc bfc" id="L502" title="All 2 branches covered.">            if(is_end) return;</span>
+<span class="fc" id="L503">            println(&quot;Everyone is done, new round!&quot;);</span>
+<span class="fc" id="L504">        }while(true);</span>
+    }
+    
+    /**
+     * Constructs a new App instance.
+     */
+    public App(){
+<span class="fc" id="L511">        super();</span>
+<span class="fc" id="L512">    }</span>
+
+    /**
+     * Entry point for running the Citadels game.
+     * @param args command-line arguments (unused)
+     */
+    public static void main(String[] args) {
+<span class="fc" id="L519">        Random tmp=new Random();</span>
+<span class="fc" id="L520">        seed=tmp.nextLong();</span>
+        
+        try{
+<span class="fc" id="L523">            App app = new App();</span>
+<span class="fc bfc" id="L524" title="All 2 branches covered.">            while(!app.is_end) app.gamestart();</span>
+<span class="fc" id="L525">            app.Game_End();</span>
+<span class="fc" id="L526">        } catch(RuntimeException e){</span>
+<span class="fc" id="L527">            e.printStackTrace();</span>
+<span class="fc" id="L528">        }</span>
+<span class="fc" id="L529">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
